@@ -1,29 +1,18 @@
 import { EditorState, StateField } from "@codemirror/state";
 
-import { showTooltip, Tooltip, tooltips } from "./tooltip";
+import { showTooltip, Tooltip, tooltips } from "../popper/index";
 
-const getCursorTooltips = (state: EditorState): readonly Tooltip[] => {
-  return state.selection.ranges
-    .filter((range) => range.empty)
-    .map((range) => {
-      let line = state.doc.lineAt(range.head);
-      let text = line.number + ":" + (range.head - line.from);
-      return {
-        pos: range.head,
-        above: true,
-        strictSide: true,
-        arrow: true,
-        create: () => {
-          let dom = document.createElement("div");
-          dom.className = "cm-tooltip-cursor";
-          dom.textContent = text;
-          return { dom };
-        },
-      };
-    });
+const getCursorTooltips = (state: EditorState): Tooltip | null => {
+  const sel = state.selection.ranges[0];
+  if (!sel) return null;
+  const { anchor, head, empty } = sel;
+  return {
+    start: anchor > head ? head : anchor,
+    end: empty ? undefined : anchor > head ? anchor : head,
+  };
 };
 
-export const cursorTooltipField = StateField.define<readonly Tooltip[]>({
+export const cursorTooltipField = StateField.define<Tooltip | null>({
   create: getCursorTooltips,
 
   update: (tooltips, tr) => {
@@ -31,7 +20,8 @@ export const cursorTooltipField = StateField.define<readonly Tooltip[]>({
     return getCursorTooltips(tr.state);
   },
 
-  provide: (f) => showTooltip.computeN([f], (state) => state.field(f)),
+  // enable showtooltips extension with tooltips info provided from statefield
+  provide: (f) => showTooltip.from(f),
 });
 
-export const ToolBar = [tooltips({ position: "absolute" }), cursorTooltipField];
+export const ToolBar = [cursorTooltipField];
