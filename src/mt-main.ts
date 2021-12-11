@@ -5,6 +5,8 @@ import {
   MiniToolbarSettingTab,
 } from "settings";
 
+import { ToolBar } from "./modules/toolbar";
+
 export default class MiniToolbar extends Plugin {
   settings: MiniToolbarSettings = DEFAULT_SETTINGS;
 
@@ -12,6 +14,8 @@ export default class MiniToolbar extends Plugin {
     console.log("loading MiniToolbar");
 
     await this.loadSettings();
+
+    this.registerEditorExtension(ToolBar);
 
     // this.addSettingTab(new MiniToolbarSettingTab(this.app, this));
   }
