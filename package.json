@@ -1,6 +1,6 @@
 {
   "name": "@aidenlx/obsidian-mini-toolbar",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "mini context toolbar in editor",
   "main": "",
   "types": "src/typings/index.d.ts",

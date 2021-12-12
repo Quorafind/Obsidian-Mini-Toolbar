@@ -1,7 +1,7 @@
 {
   "id": "obsidian-mini-toolbar",
   "name": "Mini Toolbar",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "minAppVersion": "0.13.8",
   "description": "mini context toolbar in editor",
   "author": "AidenLx",
