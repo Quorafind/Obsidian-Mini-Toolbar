@@ -1,5 +1,5 @@
 import { Extension, Facet } from "@codemirror/state";
-import { Placement } from "@popperjs/core";
+import { Placement } from "@floating-ui/core";
 
 type TooltipConfig = {
   defaultPlacement: Placement;
