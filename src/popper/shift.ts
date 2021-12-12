@@ -73,20 +73,25 @@ export const shift = (
           padding: revertPadding(detectOverflowOptions.padding),
         });
 
-        const crossProp: BasePlacement[] =
+        const crossAxisProps: BasePlacement[] =
           crossAxis === "y" ? ["top", "bottom"] : ["left", "right"];
-        if (crossProp.every((prop) => overflowMenu[prop] <= 0)) {
+        // if overlap at corssAxis
+        if (crossAxisProps.every((prop) => overflowMenu[prop] <= 0)) {
           const popperWidth = middlewareArguments.rects.floating.width;
           const minForMenu =
             mainAxisCoord + overflowMenu[minSide] - popperWidth;
           const maxForMenu =
             mainAxisCoord - overflowMenu[maxSide] + popperWidth;
 
-          const minSideGap = Math.abs(minForMenu - min);
-          const maxSideGap = Math.abs(maxForMenu - max);
+          const minSideGap = Math.abs(
+            overflow[minSide] - overflowMenu[minSide],
+          );
+          const maxSideGap = Math.abs(
+            overflow[maxSide] - overflowMenu[maxSide],
+          );
 
           // prefer placing menu left, if there is enough gap
-          if (minSideGap > popperWidth || maxSideGap < minSideGap) {
+          if (minSideGap >= popperWidth || maxSideGap < minSideGap) {
             mainAxisCoord = within(min, mainAxisCoord, minForMenu);
           } else {
             mainAxisCoord = within(maxForMenu, mainAxisCoord, max);
