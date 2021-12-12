@@ -4,13 +4,16 @@ import {
   ViewPlugin,
   ViewUpdate,
 } from "@codemirror/view";
-import { ClientRectObject, flip, shift } from "@floating-ui/core";
+import { ClientRectObject, flip } from "@floating-ui/core";
 import { computePosition } from "@floating-ui/dom";
 import equal from "fast-deep-equal";
+import { around } from "monkey-around";
+import { editorViewField, EventRef, Events, Menu } from "obsidian";
 
 import { tooltipConfig } from "./config";
 import { Tooltip } from "./define";
 import { showTooltip } from "./index";
+import { shift } from "./shift";
 
 const getRectFromXY = (x = 0, y = 0): ClientRectObject => ({
   width: 0,
@@ -62,6 +65,10 @@ class ViewPluginClass implements PluginValue {
   inView = true;
 
   defaultPlacement = this.view.state.facet(tooltipConfig).defaultPlacement;
+  editorMenu: {
+    evtRef: EventRef;
+    currMenu: Menu | null;
+  };
 
   constructor(readonly view: EditorView) {
     this.tooltipInfo = view.state.facet(showTooltip);
@@ -73,7 +80,37 @@ class ViewPluginClass implements PluginValue {
       // contextElement: this.view.scrollDOM,
     };
     this.maybeMeasure();
+    this.editorMenu = {
+      currMenu: null,
+      evtRef: view.state
+        .field(editorViewField)
+        .app.workspace.on("editor-menu", (menu) => {
+          const self = this;
+          self.onEditorMenuOpen(menu);
+          around(menu, {
+            onunload: (next) =>
+              function (this: Menu) {
+                self.onEditorMenuClose(menu);
+                return next.call(this);
+              },
+          });
+        }),
+    };
   }
+
+  onEditorMenuOpen(menu: Menu) {
+    if (!this.editorMenu.currMenu) {
+      this.editorMenu.currMenu = menu;
+      if (this.cachedRefRect) this.computePosition(this.cachedRefRect);
+      else this.maybeMeasure();
+    }
+  }
+  onEditorMenuClose(menu: Menu) {
+    if (this.editorMenu.currMenu === menu) {
+      this.editorMenu.currMenu = null;
+    }
+  }
+
   update(update: ViewUpdate) {
     let input = update.state.facet(showTooltip);
     let updated = input !== this.tooltipInfo && !equal(input, this.tooltipInfo);
@@ -86,9 +123,14 @@ class ViewPluginClass implements PluginValue {
     if (shouldMeasure) this.maybeMeasure();
   }
   destroy(): void {
+    this.editorMenu.currMenu = null;
     this.toolbarEl.remove();
+    this.view.state
+      .field(editorViewField)
+      .app.workspace.offref(this.editorMenu.evtRef);
   }
 
+  cachedRefRect: ClientRectObject | null = null;
   readFromDOM = (): void => {
     if (this.tooltipInfo) {
       let { start, end } = this.tooltipInfo;
@@ -111,18 +153,23 @@ class ViewPluginClass implements PluginValue {
       }
       const refRect = getRectFromPosCoords(startRect, endRect);
       if (refRect) {
+        this.cachedRefRect = refRect;
         this.computePosition(refRect);
       }
     }
   };
   async computePosition(refRect: ClientRectObject): Promise<void> {
     this.virtualEl.rect = refRect;
-    const padding = 0; //{ top: 20, bottom: 20, left: 0, right: 0 };
+    const { padding } = this.view.state.facet(tooltipConfig);
     const { x, y } = await computePosition(this.virtualEl, this.toolbarEl, {
       placement: this.defaultPlacement,
       middleware: [
         flip({ padding, boundary: this.view.scrollDOM }),
-        shift({ padding, boundary: this.view.scrollDOM }),
+        shift({
+          padding,
+          boundary: this.view.scrollDOM,
+          editorMenu: this.editorMenu.currMenu,
+        }),
       ],
     });
     Object.assign(this.toolbarEl.style, {
@@ -137,9 +184,6 @@ class ViewPluginClass implements PluginValue {
     if (this.inView != this.view.inView) {
       this.inView = this.view.inView;
       if (!this.inView) {
-        // this.tooltipInst.setOptions((opts) => ({
-        //   modifiers: [...(opts?.modifiers ?? [])],
-        // }));
       }
     }
   }
