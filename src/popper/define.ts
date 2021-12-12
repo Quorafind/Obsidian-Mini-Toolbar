@@ -1,3 +1,5 @@
+import { ToolBar } from "../modules/toolbar";
+
 export interface Tooltip {
   /** The document position at which to show the tooltip. */
   start: number;
@@ -6,7 +8,7 @@ export interface Tooltip {
    * should be larger than start
    **/
   end?: number;
-  create: () => HTMLElement;
+  create: (containerEl: HTMLElement) => ToolBar;
 }
 
 export const MiniToolbarEvtName = "editor-mini-toolbar";

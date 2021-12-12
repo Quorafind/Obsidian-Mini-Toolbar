@@ -8,8 +8,9 @@ import { ClientRectObject } from "@floating-ui/core";
 import { computePosition, flip, offset } from "@floating-ui/dom";
 import equal from "fast-deep-equal";
 import { around } from "monkey-around";
-import { editorViewField, EventRef, Events, Menu, Platform } from "obsidian";
+import { editorViewField, EventRef, Menu, Platform } from "obsidian";
 
+import { ToolBar } from "../modules/toolbar";
 import { tooltipConfig } from "./config";
 import { MiniToolbarEvtName, Tooltip } from "./define";
 import { showTooltip } from "./index";
@@ -53,7 +54,7 @@ const initialRect = getRectFromXY();
 class ViewPluginClass implements PluginValue {
   containerEl = this.view.dom;
   virtualEl: VirtualElement & { rect: ClientRectObject };
-  toolbarEl: HTMLElement | null = null;
+  toolbar: ToolBar | null = null;
 
   get workspace() {
     return this.view.state.field(editorViewField).app.workspace;
@@ -117,28 +118,32 @@ class ViewPluginClass implements PluginValue {
     if (this.editorMenu.currMenu === menu) {
       this.editorMenu.currMenu = null;
     }
-    if (!Platform.isMacOS && this.toolbarEl && this.shouldRemoveToolbar()) {
-      this.toolbarEl.remove();
-      this.toolbarEl = null;
+    if (!Platform.isMacOS && this.toolbar && this.shouldRemoveToolbar()) {
+      this.removeToolbar();
     }
   }
 
   createToolbar(input?: Tooltip): void {
     const info = input ?? this.tooltipInfo;
     if (!info) return;
-    let el = info.create();
+    this.removeToolbar();
+    let toolbar = info.create(this.containerEl);
     const view = this.view.state.field(editorViewField);
     const from = view.editor.offsetToPos(info.start);
     const to = info.end ? view.editor.offsetToPos(info.end) : from;
     this.workspace.trigger(
       MiniToolbarEvtName,
-      el,
+      toolbar,
       { from, to },
       view.editor,
       view,
     );
-    el.style.position = "absolute";
-    this.toolbarEl = this.containerEl.appendChild(el);
+    this.toolbar = toolbar;
+  }
+  removeToolbar(): void {
+    if (!this.toolbar) return;
+    this.toolbar.hide();
+    this.toolbar = null;
   }
   update(update: ViewUpdate) {
     let input = update.state.facet(showTooltip);
@@ -146,11 +151,8 @@ class ViewPluginClass implements PluginValue {
     if (updated) {
       this.tooltipInfo = input;
       if (this.shouldRemoveToolbar()) {
-        if (this.toolbarEl) {
-          this.toolbarEl.remove();
-          this.toolbarEl = null;
-        }
-      } else if (input && !this.toolbarEl) {
+        this.removeToolbar();
+      } else if (input && !this.toolbar) {
         this.createToolbar(input);
       }
     }
@@ -163,7 +165,8 @@ class ViewPluginClass implements PluginValue {
   }
   destroy(): void {
     this.editorMenu.currMenu = null;
-    this.toolbarEl?.remove();
+    this.removeToolbar();
+    this.toolbar = null;
     this.view.state
       .field(editorViewField)
       .app.workspace.offref(this.editorMenu.evtRef);
@@ -198,10 +201,10 @@ class ViewPluginClass implements PluginValue {
     }
   };
   async computePosition(refRect: ClientRectObject): Promise<void> {
-    if (!this.toolbarEl) return;
+    if (!this.toolbar) return;
     this.virtualEl.rect = refRect;
     const { padding } = this.view.state.facet(tooltipConfig);
-    const { x, y } = await computePosition(this.virtualEl, this.toolbarEl, {
+    const { x, y } = await computePosition(this.virtualEl, this.toolbar.dom, {
       placement: this.defaultPlacement,
       middleware: [
         offset({ mainAxis: 2 }),
@@ -213,7 +216,8 @@ class ViewPluginClass implements PluginValue {
         }),
       ],
     });
-    Object.assign(this.toolbarEl.style, {
+    console.log(x, y);
+    Object.assign(this.toolbar.dom.style, {
       top: "0",
       left: "0",
       transform: `translate(${Math.round(x)}px,${Math.round(y)}px)`,
@@ -221,7 +225,7 @@ class ViewPluginClass implements PluginValue {
   }
 
   maybeMeasure() {
-    if (this.view.inView && this.toolbarEl)
+    if (this.view.inView && this.toolbar)
       this.view.requestMeasure({ read: this.readFromDOM });
     if (this.inView != this.view.inView) {
       this.inView = this.view.inView;

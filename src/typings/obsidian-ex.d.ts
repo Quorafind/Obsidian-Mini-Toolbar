@@ -1,5 +1,6 @@
 import "obsidian";
 
+import { ToolBar } from "../modules/toolbar";
 import { MiniToolbarEvtName } from "../popper/define";
 
 declare module "obsidian" {
@@ -10,7 +11,7 @@ declare module "obsidian" {
   interface Workspace {
     trigger(
       name: typeof MiniToolbarEvtName,
-      toolbar: HTMLElement,
+      toolbar: ToolBar,
       range: EditorRange,
       editor: Editor,
       view: MarkdownView,
