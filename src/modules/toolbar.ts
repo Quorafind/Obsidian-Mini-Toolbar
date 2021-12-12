@@ -1,4 +1,7 @@
+import "./style.less";
+
 import { EditorState, StateField } from "@codemirror/state";
+import { ButtonComponent } from "obsidian";
 
 import { showTooltip, Tooltip, tooltips } from "../popper/index";
 
@@ -10,7 +13,22 @@ const getCursorTooltips = (state: EditorState): Tooltip | null => {
     start: anchor > head ? head : anchor,
     end: empty ? undefined : anchor > head ? anchor : head,
     create: () => {
-      return createDiv({ cls: "cm-mini-toolbar", text: "Hello World" });
+      return createDiv({ cls: "cm-mini-toolbar" }, (container) => {
+        const itemCls = "cm-toolbar-item";
+        new ButtonComponent(container).setIcon("scissors").setClass(itemCls);
+        new ButtonComponent(container)
+          .setIcon("two-blank-pages")
+          .setClass(itemCls);
+
+        new ButtonComponent(container).setIcon("bold-glyph").setClass(itemCls);
+        new ButtonComponent(container)
+          .setIcon("underline-glyph")
+          .setClass(itemCls);
+        new ButtonComponent(container)
+          .setIcon("strikethrough-glyph")
+          .setClass(itemCls);
+        new ButtonComponent(container).setIcon("quote-glyph").setClass(itemCls);
+      });
     },
   };
 };
