@@ -1,6 +1,7 @@
 import { detectOverflow } from "@floating-ui/core";
 import type { Options as DetectOverflowOptions } from "@floating-ui/core/src/detectOverflow";
 import type {
+  BasePlacement,
   Coords,
   Middleware,
   MiddlewareArguments,
@@ -71,18 +72,27 @@ export const shift = (
           boundary: editorMenu.dom,
           padding: revertPadding(detectOverflowOptions.padding),
         });
-        const popperWidth = middlewareArguments.rects.floating.width;
-        const minForMenu = mainAxisCoord + overflowMenu[minSide] - popperWidth;
-        const maxForMenu = mainAxisCoord - overflowMenu[maxSide] + popperWidth;
 
-        const minSideGap = Math.abs(minForMenu - min);
-        const maxSideGap = Math.abs(maxForMenu - max);
+        const crossProp: BasePlacement[] =
+          crossAxis === "y" ? ["top", "bottom"] : ["left", "right"];
+        if (crossProp.every((prop) => overflowMenu[prop] <= 0)) {
+          const popperWidth = middlewareArguments.rects.floating.width;
+          const minForMenu =
+            mainAxisCoord + overflowMenu[minSide] - popperWidth;
+          const maxForMenu =
+            mainAxisCoord - overflowMenu[maxSide] + popperWidth;
 
-        // prefer placing menu left, if there is enough gap
-        if (minSideGap > popperWidth || maxSideGap < minSideGap) {
-          mainAxisCoord = within(min, mainAxisCoord, minForMenu);
+          const minSideGap = Math.abs(minForMenu - min);
+          const maxSideGap = Math.abs(maxForMenu - max);
+
+          // prefer placing menu left, if there is enough gap
+          if (minSideGap > popperWidth || maxSideGap < minSideGap) {
+            mainAxisCoord = within(min, mainAxisCoord, minForMenu);
+          } else {
+            mainAxisCoord = within(maxForMenu, mainAxisCoord, max);
+          }
         } else {
-          mainAxisCoord = within(maxForMenu, mainAxisCoord, max);
+          mainAxisCoord = within(min, mainAxisCoord, max);
         }
       } else {
         mainAxisCoord = within(min, mainAxisCoord, max);
