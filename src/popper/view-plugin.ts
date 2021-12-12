@@ -4,8 +4,8 @@ import {
   ViewPlugin,
   ViewUpdate,
 } from "@codemirror/view";
-import { ClientRectObject, flip } from "@floating-ui/core";
-import { computePosition } from "@floating-ui/dom";
+import { ClientRectObject } from "@floating-ui/core";
+import { computePosition, flip, offset } from "@floating-ui/dom";
 import equal from "fast-deep-equal";
 import { around } from "monkey-around";
 import { editorViewField, EventRef, Events, Menu, Platform } from "obsidian";
@@ -204,6 +204,7 @@ class ViewPluginClass implements PluginValue {
     const { x, y } = await computePosition(this.virtualEl, this.toolbarEl, {
       placement: this.defaultPlacement,
       middleware: [
+        offset({ mainAxis: 2 }),
         flip({ padding, boundary: this.view.scrollDOM }),
         shift({
           padding,
