@@ -6,4 +6,7 @@ export interface Tooltip {
    * should be larger than start
    **/
   end?: number;
+  create: () => HTMLElement;
 }
+
+export const MiniToolbarEvtName = "editor-mini-toolbar";

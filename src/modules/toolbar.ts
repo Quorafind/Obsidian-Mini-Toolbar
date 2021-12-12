@@ -9,6 +9,9 @@ const getCursorTooltips = (state: EditorState): Tooltip | null => {
   return {
     start: anchor > head ? head : anchor,
     end: empty ? undefined : anchor > head ? anchor : head,
+    create: () => {
+      return createDiv({ cls: "cm-mini-toolbar", text: "Hello World" });
+    },
   };
 };
 
