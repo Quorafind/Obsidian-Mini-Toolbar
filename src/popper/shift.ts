@@ -1,14 +1,14 @@
-import { detectOverflow } from "@floating-ui/core";
 import type { Options as DetectOverflowOptions } from "@floating-ui/core/src/detectOverflow";
 import type {
-  BasePlacement,
   Coords,
   Middleware,
   MiddlewareArguments,
   Padding,
   Placement,
   Rect,
+  Side,
 } from "@floating-ui/core/src/types";
+import { detectOverflow } from "@floating-ui/dom";
 import { Menu } from "obsidian";
 
 import { getBasePlacement } from "./utils/getBasePlacement";
@@ -73,7 +73,7 @@ export const shift = (
           padding: revertPadding(detectOverflowOptions.padding),
         });
 
-        const crossAxisProps: BasePlacement[] =
+        const crossAxisProps: Side[] =
           crossAxis === "y" ? ["top", "bottom"] : ["left", "right"];
         // if overlap at corssAxis
         if (crossAxisProps.every((prop) => overflowMenu[prop] <= 0)) {

@@ -3,7 +3,7 @@ import { Padding, Placement } from "@floating-ui/core";
 
 type TooltipConfig = {
   defaultPlacement: Placement;
-  padding: Padding;
+  padding: Padding | undefined;
 };
 export const tooltipConfig = Facet.define<
   Partial<TooltipConfig>,

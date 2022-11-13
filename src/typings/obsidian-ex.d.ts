@@ -17,4 +17,10 @@ declare module "obsidian" {
       view: MarkdownView,
     ): void;
   }
+
+  interface Menu {
+    addSections(sections: string[]): Menu;
+
+    setParentElement(evt: EventTarget | null): Menu;
+  }
 }

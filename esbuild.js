@@ -51,6 +51,7 @@ const isProd = process.env.BUILD === "production";
         "@codemirror/state",
         "@codemirror/view",
         "@codemirror/rangeset",
+        "@codemirror/language",
       ],
       format: "cjs",
       mainFields: ["browser", "module", "main"],
@@ -60,7 +61,7 @@ const isProd = process.env.BUILD === "production";
       define: {
         "process.env.NODE_ENV": JSON.stringify(process.env.BUILD),
       },
-      outfile: "build/main.js",
+      outfile: "main.js",
       plugins: [lessLoader(), renamePlugin, copyManifest],
     });
   } catch (err) {

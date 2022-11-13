@@ -51,6 +51,7 @@ const getRectFromPosCoords = (
   return rect;
 };
 const initialRect = getRectFromXY();
+
 class ViewPluginClass implements PluginValue {
   containerEl = this.view.dom;
   virtualEl: VirtualElement & { rect: ClientRectObject };
@@ -82,19 +83,18 @@ class ViewPluginClass implements PluginValue {
     this.maybeMeasure();
     this.editorMenu = {
       currMenu: null,
-      evtRef: view.state
-        .field(editorViewField)
-        .app.workspace.on("editor-menu", (menu) => {
-          const self = this;
-          self.onEditorMenuOpen(menu);
-          around(menu, {
-            onunload: (next) =>
-              function (this: Menu) {
-                self.onEditorMenuClose(menu);
-                return next.call(this);
-              },
-          });
-        }),
+      evtRef: view.state.field(editorViewField),
+      // .app.workspace.on("editor-menu", (menu) => {
+      //   const self = this;
+      //   self.onEditorMenuOpen(menu);
+      //   around(menu, {
+      //     onunload: (next) =>
+      //       function (this: Menu) {
+      //         self.onEditorMenuClose(menu);
+      //         return next.call(this);
+      //       },
+      //   });
+      // }),
     };
   }
 
@@ -103,6 +103,7 @@ class ViewPluginClass implements PluginValue {
     // if without selection and no menu present
     return !(info?.end || this.editorMenu.currMenu);
   }
+
   onEditorMenuOpen(menu: Menu) {
     if (!this.editorMenu.currMenu) {
       this.editorMenu.currMenu = menu;
@@ -114,6 +115,7 @@ class ViewPluginClass implements PluginValue {
       }
     }
   }
+
   onEditorMenuClose(menu: Menu) {
     if (this.editorMenu.currMenu === menu) {
       this.editorMenu.currMenu = null;
@@ -131,6 +133,7 @@ class ViewPluginClass implements PluginValue {
     const view = this.view.state.field(editorViewField);
     const from = view.editor.offsetToPos(info.start);
     const to = info.end ? view.editor.offsetToPos(info.end) : from;
+    // if (from === to) return;
     this.workspace.trigger(
       MiniToolbarEvtName,
       toolbar,
@@ -140,11 +143,13 @@ class ViewPluginClass implements PluginValue {
     );
     this.toolbar = toolbar;
   }
+
   removeToolbar(): void {
     if (!this.toolbar) return;
     this.toolbar.hide();
     this.toolbar = null;
   }
+
   update(update: ViewUpdate) {
     let input = update.state.facet(showTooltip);
     let updated = input !== this.tooltipInfo && !equal(input, this.tooltipInfo);
@@ -163,6 +168,7 @@ class ViewPluginClass implements PluginValue {
     }
     if (shouldMeasure) this.maybeMeasure();
   }
+
   destroy(): void {
     this.editorMenu.currMenu = null;
     this.removeToolbar();
@@ -200,6 +206,7 @@ class ViewPluginClass implements PluginValue {
       }
     }
   };
+
   async computePosition(refRect: ClientRectObject): Promise<void> {
     if (!this.toolbar) return;
     this.virtualEl.rect = refRect;
@@ -207,7 +214,7 @@ class ViewPluginClass implements PluginValue {
     const { x, y } = await computePosition(this.virtualEl, this.toolbar.dom, {
       placement: this.defaultPlacement,
       middleware: [
-        offset({ mainAxis: 2 }),
+        offset({ mainAxis: 5 }),
         flip({ padding, boundary: this.view.scrollDOM }),
         shift({
           padding,
@@ -216,7 +223,6 @@ class ViewPluginClass implements PluginValue {
         }),
       ],
     });
-    console.log(x, y);
     Object.assign(this.toolbar.dom.style, {
       top: "0",
       left: "0",
