@@ -42,4 +42,4 @@ The plugin would not be possible without the help of Aidenlx, he is busy now so 
 changes.
 
 His original
-repo: ![https://github.com/aidenlx/obsidian-mini-toolbar](https://github.com/Quorafind/Obsidian-Inline-Toolbar.git)
+repo: ![https://github.com/aidenlx/obsidian-mini-toolbar](https://github.com/Aidenlx/Obsidian-Mini-Toolbar)

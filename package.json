@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "cross-env BUILD=dev node esbuild.js",
     "build": "cross-env BUILD=production node esbuild.js",
-    "prettier": "prettier --write 'src/**/*.+(ts|tsx|json|html|css)'",
+    "prettier": " prettier --write 'src/**/*.+(ts|tsx|json|html|css)' ",
     "eslint": "eslint . --ext .ts,.tsx --fix",
     "release": "release-it"
   },
@@ -58,7 +58,6 @@
   "release-it": {
     "hooks": {
       "before:init": [
-        "npm run prettier",
         "npm run eslint"
       ],
       "after:bump": [

@@ -31,7 +31,7 @@ module.exports = {
   rules: {
     "simple-import-sort/imports": "error",
     "simple-import-sort/exports": "error",
-    "import/no-unresolved": "error",
+    "import/no-unresolved": "warn",
     "prefer-arrow/prefer-arrow-functions": [
       "warn",
       {
