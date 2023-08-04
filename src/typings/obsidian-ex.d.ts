@@ -8,6 +8,10 @@ declare module "obsidian" {
     dom: HTMLElement;
   }
 
+  interface App {
+    commands: any;
+  }
+
   interface Workspace {
     trigger(
       name: typeof MiniToolbarEvtName,

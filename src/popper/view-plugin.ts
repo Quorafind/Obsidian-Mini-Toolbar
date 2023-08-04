@@ -7,8 +7,13 @@ import {
 import { ClientRectObject } from "@floating-ui/core";
 import { computePosition, flip, offset } from "@floating-ui/dom";
 import equal from "fast-deep-equal";
-import { around } from "monkey-around";
-import { editorViewField, EventRef, Menu, Platform } from "obsidian";
+import {
+  editorInfoField,
+  editorViewField,
+  EventRef,
+  Menu,
+  Platform,
+} from "obsidian";
 
 import { ToolBar } from "../modules/toolbar";
 import { tooltipConfig } from "./config";
@@ -58,7 +63,7 @@ class ViewPluginClass implements PluginValue {
   toolbar: ToolBar | null = null;
 
   get workspace() {
-    return this.view.state.field(editorViewField).app.workspace;
+    return this.view.state.field(editorInfoField).app.workspace;
   }
 
   tooltipInfo: Tooltip | null;
@@ -83,18 +88,7 @@ class ViewPluginClass implements PluginValue {
     this.maybeMeasure();
     this.editorMenu = {
       currMenu: null,
-      evtRef: view.state.field(editorViewField),
-      // .app.workspace.on("editor-menu", (menu) => {
-      //   const self = this;
-      //   self.onEditorMenuOpen(menu);
-      //   around(menu, {
-      //     onunload: (next) =>
-      //       function (this: Menu) {
-      //         self.onEditorMenuClose(menu);
-      //         return next.call(this);
-      //       },
-      //   });
-      // }),
+      evtRef: view.state.field(editorInfoField),
     };
   }
 
@@ -130,10 +124,10 @@ class ViewPluginClass implements PluginValue {
     if (!info) return;
     this.removeToolbar();
     let toolbar = info.create(this.containerEl);
-    const view = this.view.state.field(editorViewField);
+    const view = this.view.state.field(editorInfoField);
+    if (!view || !view?.editor) return;
     const from = view.editor.offsetToPos(info.start);
     const to = info.end ? view.editor.offsetToPos(info.end) : from;
-    // if (from === to) return;
     this.workspace.trigger(
       MiniToolbarEvtName,
       toolbar,
@@ -174,7 +168,7 @@ class ViewPluginClass implements PluginValue {
     this.removeToolbar();
     this.toolbar = null;
     this.view.state
-      .field(editorViewField)
+      .field(editorInfoField)
       .app.workspace.offref(this.editorMenu.evtRef);
   }
 

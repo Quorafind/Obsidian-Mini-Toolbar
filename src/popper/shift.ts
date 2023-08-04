@@ -26,13 +26,17 @@ export type Options = {
 const objectMap = <O extends Object, V>(
   obj: O,
   fn: <K extends keyof O>(val: O[K], key: K, index: number) => V,
-): { [K in keyof O]: V } =>
-  Object.fromEntries(Object.entries(obj).map(([k, v], i) => [k, fn(v, k, i)]));
+): { [K in keyof O]: V } => {
+  return Object.fromEntries(
+    Object.entries(obj).map(([k, v], i) => [k, fn(v as any, k as any, i)]),
+  ) as { [K in keyof O]: V };
+};
+
 const revertPadding = (padding: Padding | undefined): Padding | undefined => {
   if (padding === undefined) return padding;
   if (typeof padding === "number") return -padding;
   else {
-    return objectMap(padding, (val) => -val);
+    return objectMap(padding, (val) => (val !== undefined ? -val : val));
   }
 };
 

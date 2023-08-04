@@ -2,14 +2,14 @@ import "./style.less";
 
 import { getApi } from "@aidenlx/obsidian-icon-shortcodes";
 import {
-  foldable,
   lineClassNodeProp,
   syntaxTree,
   tokenClassNodeProp,
 } from "@codemirror/language";
-import { EditorState, SelectionRange, StateField } from "@codemirror/state";
+import { EditorState, StateField } from "@codemirror/state";
 import { SyntaxNode } from "@lezer/common/dist/tree";
 import {
+  App,
   BaseComponent,
   ButtonComponent,
   Component,
@@ -17,7 +17,7 @@ import {
   setIcon,
 } from "obsidian";
 
-import { showTooltip, Tooltip, tooltips } from "../popper/index";
+import { showTooltip, Tooltip } from "../popper";
 import {
   SmallButton as SBtnDef,
   ToolBar as ToolBarDef,
@@ -31,94 +31,65 @@ import {
   strikethroughText,
 } from "./defaultCommand";
 
-const getCursorTooltips = (state: EditorState): Tooltip | null => {
+const getCursorTooltips = (state: EditorState, app: App): Tooltip | null => {
   const sel = state.selection.ranges[0];
   if (!sel) return null;
+
   const { anchor, head, empty } = sel;
-  if (
-    state.doc.lineAt(state.selection.ranges[0].from).number !==
-    state.doc.lineAt(state.selection.ranges[0].to).number
-  ) {
-    return {
-      start: anchor > head ? head : anchor,
-      end: empty ? undefined : anchor > head ? anchor : head,
-      create: (container) =>
-        new ToolBar(container)
-          .addSmallButton((btn) =>
-            btn.setIcon("scissors").onClick(() => cutText(state)),
-          )
-          .addSmallButton((btn) =>
-            btn.setIcon("copy").onClick(() => copyText(state)),
-          )
-          .addSmallButton((btn) =>
-            btn.setIcon("bold").onClick(() => boldText()),
-          )
-          .addSmallButton((btn) =>
-            btn.setIcon("italic").onClick(() => italicText()),
-          )
-          .addSmallButton((btn) =>
-            btn.setIcon("strikethrough").onClick(() => strikethroughText()),
-          )
-          .addSmallButton((btn) =>
-            btn.setIcon("highlighter").onClick(() => markText()),
-          ),
-    };
-  } else {
-    return {
-      start: anchor > head ? head : anchor,
-      end: empty ? undefined : anchor > head ? anchor : head,
-      create: (container) =>
-        new ToolBar(container)
-          // .addSmallButton((btn) =>
-          //   btn
-          //     .setClass("mini-toolbar-dropdown")
-          //     .setDropdownText(state)
-          //     .setOptionsList(["A", "B", "C"])
-          //     .onClick(() => {
-          //       console.log(state.selection.ranges);
-          //     }),
-          // )
-          .addSmallButton((btn) =>
-            btn.setIcon("scissors").onClick(() => cutText(state)),
-          )
-          .addSmallButton((btn) =>
-            btn.setIcon("copy").onClick(() => copyText(state)),
-          )
-          .addSmallButton((btn) =>
-            btn.setIcon("bold").onClick(() => boldText()),
-          )
-          .addSmallButton((btn) =>
-            btn.setIcon("italic").onClick(() => italicText()),
-          )
-          .addSmallButton((btn) =>
-            btn.setIcon("strikethrough").onClick(() => strikethroughText()),
-          ),
-      // .addSmallButton((btn) =>
-      //   btn
-      //     .setClass("mini-toolbar-dropdown")
-      //     .setDropdownIcon()
-      //     .setOptionsList(["A", "B", "C"])
-      //     .onClick(() => {
-      //       console.log(state.selection.ranges);
-      //     }),
-      // ),
-    };
-  }
+  let [start, end] = [anchor, head].sort();
+
+  const isMultiLineSelection =
+    state.doc.lineAt(sel.from).number !== state.doc.lineAt(sel.to).number;
+
+  const createToolbar = (container: any) => {
+    const toolbar = new ToolBar(container)
+      .addSmallButton((btn) =>
+        btn.setIcon("scissors").onClick(() => cutText(state)),
+      )
+      .addSmallButton((btn) =>
+        btn.setIcon("copy").onClick(() => copyText(state)),
+      )
+      .addSmallButton((btn) => btn.setIcon("bold").onClick(() => boldText(app)))
+      .addSmallButton((btn) =>
+        btn.setIcon("italic").onClick(() => italicText(app)),
+      )
+      .addSmallButton((btn) =>
+        btn.setIcon("strikethrough").onClick(() => strikethroughText(app)),
+      );
+
+    if (isMultiLineSelection) {
+      toolbar.addSmallButton((btn) =>
+        btn.setIcon("highlighter").onClick(() => markText(app)),
+      );
+    }
+
+    return toolbar;
+  };
+
+  return {
+    start: start,
+    end: empty ? undefined : end,
+    create: createToolbar,
+  };
 };
 
-export const cursorTooltipField = StateField.define<Tooltip | null>({
-  create: getCursorTooltips,
+export const cursorTooltipField = (app: App) => {
+  return StateField.define<Tooltip | null>({
+    create: (state: EditorState) => getCursorTooltips(state, app),
 
-  update: (tooltips, tr) => {
-    if (!tr.docChanged && !tr.selection) return tooltips;
-    return getCursorTooltips(tr.state);
-  },
+    update: (tooltips, tr) => {
+      if (!tr.docChanged && !tr.selection) return tooltips;
+      return getCursorTooltips(tr.state, app);
+    },
 
-  // enable showtooltips extension with tooltips info provided from statefield
-  provide: (f) => showTooltip.from(f),
-});
+    // enable showtooltips extension with tooltips info provided from statefield
+    provide: (f) => showTooltip.from(f),
+  });
+};
 
-export const ToolBarExtension = [cursorTooltipField];
+export const ToolBarExtension = (app: App) => {
+  return [cursorTooltipField(app)];
+};
 
 class SmallButton extends BaseComponent implements SBtnDef {
   button: ButtonComponent;
@@ -180,7 +151,7 @@ class SmallButton extends BaseComponent implements SBtnDef {
     let syntaxNode = syntaxTree(state).resolveInner(linePos + 1);
     // @ts-ignore
     let nodeProps: string = syntaxNode.type.prop(tokenClassNodeProp);
-    textDiv.setText(this.detectFormat(nodeProps, syntaxNode));
+    textDiv.setText(this.detectFormat(nodeProps, syntaxNode) || "Text");
     return this;
   }
 
@@ -197,7 +168,7 @@ class SmallButton extends BaseComponent implements SBtnDef {
     return this;
   }
 
-  detectFormat(nodeProps: string, syntaxNode: SyntaxNode): string {
+  detectFormat(nodeProps: string, syntaxNode: SyntaxNode): string | undefined {
     if (!nodeProps) return "Text";
     if (nodeProps.includes("strong")) return "Bold";
     if (nodeProps.includes("em")) return "Italic";
@@ -221,7 +192,7 @@ class SmallButton extends BaseComponent implements SBtnDef {
       if (syntaxNode?.parent) {
         // @ts-ignore
         const nodeProps = syntaxNode.parent?.type.prop(lineClassNodeProp);
-        if (nodeProps.contains("HyperMD-task-line")) return "To-do list";
+        if (nodeProps?.contains("HyperMD-task-line")) return "To-do list";
       }
       if (nodeProps.contains("formatting-list-ol")) return "Numbered list";
       if (nodeProps.contains("formatting-list-ul")) return "Bulleted list";

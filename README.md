@@ -2,6 +2,14 @@
 
 ## Intro
 
+> Thanks
+>
+> The plugin would not be possible without the help of Aidenlx, he is busy now so I forked his plugin and made some
+> changes.
+>
+> His original
+> repo: [https://github.com/aidenlx/obsidian-mini-toolbar](https://github.com/Aidenlx/Obsidian-Mini-Toolbar)
+
 ## How to use
 
 - Select text when you use live preview mode, click on any button in the toolbar.
@@ -35,11 +43,3 @@ plugin, add the beta repository `quorafind/obsidian-mini-toolbar`, and then have
 4. Search for this plugin
 5. Click `Install`
 6. Once installed, close the community plugins window and the patch is ready to use.
-
-# Thanks
-
-The plugin would not be possible without the help of Aidenlx, he is busy now so I forked his plugin and made some
-changes.
-
-His original
-repo: ![https://github.com/aidenlx/obsidian-mini-toolbar](https://github.com/Aidenlx/Obsidian-Mini-Toolbar)
